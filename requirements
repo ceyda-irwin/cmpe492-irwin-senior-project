@@ -1,2 +1,6 @@
 numpy 
 matplotlib
+pillow
+pandas
+scipy
+torch torchvision
