@@ -1,5 +1,7 @@
 import os
 import random
+from pathlib import Path
+
 import numpy as np
 import matplotlib.pyplot as plt
 from typing import Tuple
@@ -11,8 +13,9 @@ from torch.utils.data import Dataset, DataLoader, random_split
 # -----------------------------
 # Config
 # -----------------------------
-DATA_FILE = "data/processed/rd_dataset.npz"
-MODEL_DIR = "models"
+ROOT = Path(__file__).resolve().parents[1]
+DATA_FILE = str(ROOT / "data" / "processed" / "rd_dataset.npz")
+MODEL_DIR = str(ROOT / "scripts" / "models")
 os.makedirs(MODEL_DIR, exist_ok=True)
 
 BATCH_SIZE = 32

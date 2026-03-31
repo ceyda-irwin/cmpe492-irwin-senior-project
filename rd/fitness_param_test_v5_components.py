@@ -1,5 +1,9 @@
+from pathlib import Path
+
 import numpy as np
 from scipy import ndimage
+
+ROOT = Path(__file__).resolve().parents[1]
 
 # -----------------------------
 # Fixed global settings
@@ -18,7 +22,7 @@ TARGET_F = 0.0275
 TARGET_K = 0.0600
 
 # Load target pattern
-target = np.load("target_pattern.npy")
+target = np.load(ROOT / "outputs" / "target" / "target_pattern.npy")
 
 
 def laplacian(Z: np.ndarray) -> np.ndarray:

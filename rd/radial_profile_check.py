@@ -1,6 +1,11 @@
+from pathlib import Path
+
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy import ndimage
+
+ROOT = Path(__file__).resolve().parents[1]
+VISUAL_DIR = ROOT / "outputs" / "visual_checks"
+VISUAL_DIR.mkdir(parents=True, exist_ok=True)
 
 N = 200
 Du = 0.16
@@ -75,56 +80,47 @@ def normalize(img: np.ndarray) -> np.ndarray:
     return (img - img_min) / (img_max - img_min)
 
 
-def labeled_components(img: np.ndarray, min_size: int = 8):
+def radial_fft_profile(img: np.ndarray, max_radius: int = 40) -> np.ndarray:
     img_n = normalize(img)
-    thresh = np.mean(img_n) + 0.5 * np.std(img_n)
-    binary = img_n > thresh
+    img_zm = img_n - np.mean(img_n)
 
-    structure = np.ones((3, 3), dtype=int)
-    labeled, num = ndimage.label(binary, structure=structure)
+    fft2 = np.fft.fft2(img_zm)
+    fft_shifted = np.fft.fftshift(fft2)
+    magnitude = np.log1p(np.abs(fft_shifted))
 
-    if num == 0:
-        return binary, np.zeros_like(labeled), 0
+    h, w = magnitude.shape
+    cy, cx = h // 2, w // 2
 
-    component_areas = ndimage.sum(binary, labeled, index=np.arange(1, num + 1))
-    component_areas = np.array(component_areas)
+    y, x = np.indices((h, w))
+    r = np.sqrt((x - cx)**2 + (y - cy)**2)
+    r_int = np.floor(r).astype(int)
 
-    cleaned = np.zeros_like(labeled)
-    new_label = 1
+    profile = []
+    for radius in range(max_radius):
+        mask = (r_int == radius)
+        profile.append(np.mean(magnitude[mask]) if np.any(mask) else 0.0)
 
-    for old_label, area in enumerate(component_areas, start=1):
-        if area >= min_size:
-            cleaned[labeled == old_label] = new_label
-            new_label += 1
-
-    return binary, cleaned, new_label - 1
+    return normalize(np.array(profile))
 
 
 patterns = [
     ("target", 0.0275, 0.0600),
-    ("close", 0.0250, 0.0600),
+    ("close", 0.0300, 0.0600),
     ("confuser", 0.0200, 0.0550),
-    ("stripe_like", 0.0245, 0.0570),
+    ("far", 0.0450, 0.0500),
 ]
 
-fig, axes = plt.subplots(len(patterns), 3, figsize=(10, 14))
+plt.figure(figsize=(8, 5))
 
-for row, (label, F, k) in enumerate(patterns):
+for label, F, k in patterns:
     V = simulate(Du, Dv, F, k, steps)
-    binary, labeled, count = labeled_components(V)
+    profile = radial_fft_profile(V, max_radius=40)
+    plt.plot(profile, marker="o", label=f"{label} ({F}, {k})")
 
-    axes[row, 0].imshow(V, cmap="gray")
-    axes[row, 0].set_title(f"{label}\nF={F}, k={k}")
-    axes[row, 0].axis("off")
-
-    axes[row, 1].imshow(binary, cmap="gray")
-    axes[row, 1].set_title("Thresholded")
-    axes[row, 1].axis("off")
-
-    axes[row, 2].imshow(labeled, cmap="nipy_spectral")
-    axes[row, 2].set_title(f"Components: {count}")
-    axes[row, 2].axis("off")
-
+plt.xlabel("Radial frequency bin")
+plt.ylabel("Normalized energy")
+plt.title("Radial FFT Profiles")
+plt.legend()
 plt.tight_layout()
-plt.savefig("component_visual_check.png", dpi=200)
+plt.savefig(VISUAL_DIR / "radial_profile_check.png", dpi=200)
 plt.show()

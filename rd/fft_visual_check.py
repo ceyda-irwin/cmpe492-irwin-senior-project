@@ -1,5 +1,11 @@
+from pathlib import Path
+
 import numpy as np
 import matplotlib.pyplot as plt
+
+ROOT = Path(__file__).resolve().parents[1]
+VISUAL_DIR = ROOT / "outputs" / "visual_checks"
+VISUAL_DIR.mkdir(parents=True, exist_ok=True)
 
 N = 200
 Du = 0.16
@@ -113,5 +119,5 @@ for row, (label, F, k) in enumerate(patterns):
     axes[row, 1].axis("off")
 
 plt.tight_layout()
-plt.savefig("fft_visual_check.png", dpi=200)
+plt.savefig(VISUAL_DIR / "fft_visual_check.png", dpi=200)
 plt.show()

@@ -1,7 +1,10 @@
-import numpy as np
-import matplotlib.pyplot as plt
+from pathlib import Path
 
-DATA_FILE = "data/processed/rd_dataset.npz"
+import matplotlib.pyplot as plt
+import numpy as np
+
+ROOT = Path(__file__).resolve().parents[1]
+DATA_FILE = str(ROOT / "data" / "processed" / "rd_dataset.npz")
 
 data = np.load(DATA_FILE)
 X = data["X"]

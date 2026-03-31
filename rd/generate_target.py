@@ -1,5 +1,11 @@
+from pathlib import Path
+
 import numpy as np
 import matplotlib.pyplot as plt
+
+ROOT = Path(__file__).resolve().parents[1]
+TARGET_DIR = ROOT / "outputs" / "target"
+TARGET_DIR.mkdir(parents=True, exist_ok=True)
 
 # Grid size
 N = 200
@@ -79,12 +85,12 @@ def simulate(Du, Dv, F, k, steps):
 U, V = simulate(Du, Dv, F, k, steps)
 
 # Save raw array too
-np.save("target_pattern.npy", V)
+np.save(TARGET_DIR / "target_pattern.npy", V)
 
 # Save image
 plt.figure(figsize=(6, 6))
 plt.imshow(V, cmap="gray")
 plt.axis("off")
 plt.tight_layout()
-plt.savefig("target_pattern.png", dpi=200, bbox_inches="tight", pad_inches=0)
+plt.savefig(TARGET_DIR / "target_pattern.png", dpi=200, bbox_inches="tight", pad_inches=0)
 plt.show()

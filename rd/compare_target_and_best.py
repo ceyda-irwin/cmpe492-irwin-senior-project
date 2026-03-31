@@ -1,5 +1,11 @@
+from pathlib import Path
+
 import numpy as np
 import matplotlib.pyplot as plt
+
+ROOT = Path(__file__).resolve().parents[1]
+VISUAL_DIR = ROOT / "outputs" / "visual_checks"
+VISUAL_DIR.mkdir(parents=True, exist_ok=True)
 
 # -----------------------------
 # Fixed settings
@@ -97,5 +103,5 @@ axes[2].set_title("Absolute Difference")
 axes[2].axis("off")
 
 plt.tight_layout()
-plt.savefig("target_vs_best_comparison.png", dpi=200)
+plt.savefig(VISUAL_DIR / "target_vs_best_comparison.png", dpi=200)
 plt.show()

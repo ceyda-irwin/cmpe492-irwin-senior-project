@@ -1,4 +1,8 @@
+from pathlib import Path
+
 import numpy as np
+
+ROOT = Path(__file__).resolve().parents[1]
 
 # -----------------------------
 # Fixed global settings
@@ -17,7 +21,7 @@ TARGET_F = 0.0275
 TARGET_K = 0.0600
 
 # Load target pattern
-target = np.load("target_pattern.npy")
+target = np.load(ROOT / "outputs" / "target" / "target_pattern.npy")
 
 
 def laplacian(Z: np.ndarray) -> np.ndarray:
@@ -107,55 +111,59 @@ def compute_features(V: np.ndarray):
     }
 
 
-def fft_signature(img: np.ndarray, crop_size: int = 64) -> np.ndarray:
+def radial_fft_profile(img: np.ndarray, max_radius: int = 40) -> np.ndarray:
     """
-    Compute centered log-magnitude FFT signature.
-    Keep only a square crop around the center frequencies.
+    Compute radial average of log-magnitude FFT.
     """
     img_n = normalize(img)
-
-    # Remove DC bias to emphasize pattern structure
     img_zm = img_n - np.mean(img_n)
 
     fft2 = np.fft.fft2(img_zm)
     fft_shifted = np.fft.fftshift(fft2)
-    magnitude = np.abs(fft_shifted)
+    magnitude = np.log1p(np.abs(fft_shifted))
 
-    # Log scale for stability
-    log_mag = np.log1p(magnitude)
+    h, w = magnitude.shape
+    cy, cx = h // 2, w // 2
 
-    h, w = log_mag.shape
-    ch, cw = h // 2, w // 2
-    r = crop_size // 2
+    y, x = np.indices((h, w))
+    r = np.sqrt((x - cx)**2 + (y - cy)**2)
+    r_int = np.floor(r).astype(int)
 
-    cropped = log_mag[ch-r:ch+r, cw-r:cw+r]
-    cropped = normalize(cropped)
+    profile = []
+    for radius in range(max_radius):
+        mask = (r_int == radius)
+        if np.any(mask):
+            profile.append(np.mean(magnitude[mask]))
+        else:
+            profile.append(0.0)
 
-    return cropped
+    profile = np.array(profile, dtype=np.float64)
+    profile = normalize(profile)
+    return profile
 
 
 target_n = normalize(target)
 target_feat = compute_features(target)
-target_fft = fft_signature(target, crop_size=64)
+target_radial = radial_fft_profile(target, max_radius=40)
 
 
 def fitness(candidate: np.ndarray) -> float:
     candidate_n = normalize(candidate)
     candidate_feat = compute_features(candidate)
-    candidate_fft = fft_signature(candidate, crop_size=64)
+    candidate_radial = radial_fft_profile(candidate, max_radius=40)
 
     mse_error = mse(candidate_n, target_n)
     std_penalty = abs(candidate_feat["std"] - target_feat["std"])
     grad_penalty = abs(candidate_feat["grad"] - target_feat["grad"])
     active_penalty = abs(candidate_feat["active"] - target_feat["active"])
-    fft_penalty = mse(candidate_fft, target_fft)
+    radial_penalty = mse(candidate_radial, target_radial)
 
     total_error = (
-        0.9 * mse_error
+        0.8 * mse_error
         + 1.2 * std_penalty
         + 1.2 * grad_penalty
         + 0.8 * active_penalty
-        + 2.0 * fft_penalty
+        + 2.5 * radial_penalty
     )
 
     return 1.0 / (total_error + 1e-8)
@@ -172,7 +180,7 @@ test_params = [
     ("far_2",        0.0200, 0.0650),
 ]
 
-print("Testing FFT-enhanced fitness against target pattern:\n")
+print("Testing radial-FFT-enhanced fitness against target pattern:\n")
 print(f"Target parameters: F={TARGET_F}, k={TARGET_K}\n")
 
 results = []

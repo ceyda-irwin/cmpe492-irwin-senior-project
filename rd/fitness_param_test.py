@@ -1,6 +1,12 @@
-import numpy as np
-import matplotlib.pyplot as plt
+from pathlib import Path
 
+import numpy as np
+
+ROOT = Path(__file__).resolve().parents[1]
+
+# -----------------------------
+# Fixed global settings
+# -----------------------------
 N = 200
 Du = 0.16
 Dv = 0.08
@@ -9,6 +15,13 @@ dt = 1.0
 seed = 42
 check_interval = 100
 stability_threshold = 1e-5
+
+# Target parameters
+TARGET_F = 0.0275
+TARGET_K = 0.0600
+
+# Load target pattern
+target = np.load(ROOT / "outputs" / "target" / "target_pattern.npy")
 
 
 def laplacian(Z: np.ndarray) -> np.ndarray:
@@ -36,10 +49,11 @@ def initialize_grid(n: int, rng: np.random.Generator):
 
     U = np.clip(U, 0, 1)
     V = np.clip(V, 0, 1)
+
     return U, V
 
 
-def simulate(Du, Dv, F, k, steps):
+def simulate(Du: float, Dv: float, F: float, k: float, steps: int):
     rng = np.random.default_rng(seed)
     U, V = initialize_grid(N, rng)
 
@@ -69,52 +83,48 @@ def simulate(Du, Dv, F, k, steps):
 def normalize(img: np.ndarray) -> np.ndarray:
     img_min = img.min()
     img_max = img.max()
+
     if img_max - img_min < 1e-12:
         return np.zeros_like(img)
+
     return (img - img_min) / (img_max - img_min)
 
 
-def radial_fft_profile(img: np.ndarray, max_radius: int = 40) -> np.ndarray:
-    img_n = normalize(img)
-    img_zm = img_n - np.mean(img_n)
-
-    fft2 = np.fft.fft2(img_zm)
-    fft_shifted = np.fft.fftshift(fft2)
-    magnitude = np.log1p(np.abs(fft_shifted))
-
-    h, w = magnitude.shape
-    cy, cx = h // 2, w // 2
-
-    y, x = np.indices((h, w))
-    r = np.sqrt((x - cx)**2 + (y - cy)**2)
-    r_int = np.floor(r).astype(int)
-
-    profile = []
-    for radius in range(max_radius):
-        mask = (r_int == radius)
-        profile.append(np.mean(magnitude[mask]) if np.any(mask) else 0.0)
-
-    return normalize(np.array(profile))
+def mse(a: np.ndarray, b: np.ndarray) -> float:
+    return float(np.mean((a - b) ** 2))
 
 
-patterns = [
-    ("target", 0.0275, 0.0600),
-    ("close", 0.0300, 0.0600),
-    ("confuser", 0.0200, 0.0550),
-    ("far", 0.0450, 0.0500),
+def fitness(candidate: np.ndarray, target: np.ndarray) -> float:
+    candidate_n = normalize(candidate)
+    target_n = normalize(target)
+
+    error = mse(candidate_n, target_n)
+    return 1.0 / (error + 1e-8)
+
+
+# Test parameter sets
+test_params = [
+    ("exact_target", 0.0275, 0.0600),
+    ("very_close_1", 0.0275, 0.0575),
+    ("very_close_2", 0.0300, 0.0600),
+    ("close_3",      0.0250, 0.0600),
+    ("medium_far_1", 0.0350, 0.0600),
+    ("medium_far_2", 0.0200, 0.0550),
+    ("far_1",        0.0450, 0.0500),
+    ("far_2",        0.0200, 0.0650),
 ]
 
-plt.figure(figsize=(8, 5))
+print("Testing fitness against target pattern:\n")
+print(f"Target parameters: F={TARGET_F}, k={TARGET_K}\n")
 
-for label, F, k in patterns:
-    V = simulate(Du, Dv, F, k, steps)
-    profile = radial_fft_profile(V, max_radius=40)
-    plt.plot(profile, marker="o", label=f"{label} ({F}, {k})")
+results = []
 
-plt.xlabel("Radial frequency bin")
-plt.ylabel("Normalized energy")
-plt.title("Radial FFT Profiles")
-plt.legend()
-plt.tight_layout()
-plt.savefig("radial_profile_check.png", dpi=200)
-plt.show()
+for label, F, k in test_params:
+    print(f"Running {label}: F={F}, k={k}")
+    candidate = simulate(Du, Dv, F, k, steps)
+    score = fitness(candidate, target)
+    results.append((label, F, k, score))
+
+print("\nResults:")
+for label, F, k, score in sorted(results, key=lambda x: x[3], reverse=True):
+    print(f"{label:12s} | F={F:.4f}, k={k:.4f} | fitness={score:.6f}")

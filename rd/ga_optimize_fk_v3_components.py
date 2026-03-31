@@ -1,7 +1,15 @@
 import random
+from pathlib import Path
+
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import ndimage
+
+ROOT = Path(__file__).resolve().parents[1]
+TARGET_NPY = ROOT / "outputs" / "target" / "target_pattern.npy"
+GA_OUT = ROOT / "outputs" / "ga"
+GA_BEST_COMPONENTS_DIR = GA_OUT / "best_components_gen"
+GA_BEST_COMPONENTS_DIR.mkdir(parents=True, exist_ok=True)
 
 # -----------------------------
 # Fixed simulation settings
@@ -28,7 +36,7 @@ MUTATION_SCALE_F = 0.0012
 MUTATION_SCALE_K = 0.0012
 
 # Load target
-target = np.load("target_pattern.npy")
+target = np.load(TARGET_NPY)
 
 
 def laplacian(Z: np.ndarray) -> np.ndarray:
@@ -285,7 +293,7 @@ def save_best_image(best_result, generation):
     )
     plt.axis("off")
     plt.tight_layout()
-    plt.savefig(f"best_components_gen_{generation:02d}.png", dpi=180, bbox_inches="tight")
+    plt.savefig(GA_BEST_COMPONENTS_DIR / f"best_components_gen_{generation:02d}.png", dpi=180, bbox_inches="tight")
     plt.close()
 
 
@@ -327,7 +335,7 @@ def main():
     plt.ylabel("Best Fitness")
     plt.title("GA Optimization Progress (Component-Enhanced Fitness)")
     plt.tight_layout()
-    plt.savefig("ga_fitness_progress_components.png", dpi=180)
+    plt.savefig(GA_OUT / "ga_fitness_progress_components.png", dpi=180)
     plt.show()
 
 

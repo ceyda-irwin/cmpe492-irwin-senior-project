@@ -1,6 +1,10 @@
 import os
-import numpy as np
+from pathlib import Path
 from typing import Tuple
+
+import numpy as np
+
+ROOT = Path(__file__).resolve().parents[1]
 
 # -----------------------------
 # Simulation settings
@@ -21,8 +25,8 @@ K_MIN, K_MAX = 0.0550, 0.0625
 # Dataset settings
 NUM_SAMPLES = 10000
 OUTPUT_SIZE = 64
-OUTPUT_DIR = "data/processed"
-OUTPUT_FILE = os.path.join(OUTPUT_DIR, "rd_dataset.npz")
+OUTPUT_DIR = str(ROOT / "data" / "processed")
+OUTPUT_FILE = str(ROOT / "data" / "processed" / "rd_dataset.npz")
 
 
 def laplacian(Z: np.ndarray) -> np.ndarray:

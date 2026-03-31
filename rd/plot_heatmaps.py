@@ -1,7 +1,12 @@
-import pandas as pd
-import matplotlib.pyplot as plt
+from pathlib import Path
 
-df = pd.read_csv("refined_sweep_outputs/results.csv")
+import matplotlib.pyplot as plt
+import pandas as pd
+
+ROOT = Path(__file__).resolve().parents[1]
+REFINED_DIR = ROOT / "outputs" / "sweeps" / "refined_sweep_outputs"
+
+df = pd.read_csv(REFINED_DIR / "results.csv")
 
 for metric in ["std_V", "gradient_strength", "active_ratio", "steps_used"]:
     pivot = df.pivot(index="k", columns="F", values=metric)
@@ -15,7 +20,7 @@ for metric in ["std_V", "gradient_strength", "active_ratio", "steps_used"]:
     plt.ylabel("k")
     plt.title(f"Heatmap of {metric}")
     plt.tight_layout()
-    plt.savefig(f"refined_sweep_outputs/heatmap_{metric}.png", dpi=150)
+    plt.savefig(REFINED_DIR / f"heatmap_{metric}.png", dpi=150)
     plt.close()
 
 print("Heatmaps saved.")

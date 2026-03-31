@@ -1,9 +1,13 @@
 import os
 import math
+from pathlib import Path
+
 from PIL import Image, ImageDraw
 
-INPUT_DIR = "refined_sweep_outputs"
-OUTPUT_FILE = "refined_sweep_outputs/refined_contact_sheet.png"
+ROOT = Path(__file__).resolve().parents[1]
+REFINED_DIR = ROOT / "outputs" / "sweeps" / "refined_sweep_outputs"
+INPUT_DIR = str(REFINED_DIR)
+OUTPUT_FILE = REFINED_DIR / "refined_contact_sheet.png"
 
 image_files = [
     f for f in os.listdir(INPUT_DIR)
@@ -12,7 +16,7 @@ image_files = [
 image_files.sort()
 
 if not image_files:
-    raise ValueError("No PNG files found in refined_sweep_outputs")
+    raise ValueError(f"No PNG files found in {INPUT_DIR}")
 
 thumb_w, thumb_h = 220, 220
 label_h = 30

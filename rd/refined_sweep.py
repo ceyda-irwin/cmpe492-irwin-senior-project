@@ -1,9 +1,11 @@
 import os
+from pathlib import Path
 import csv
 import numpy as np
 import matplotlib.pyplot as plt
 
-OUTPUT_DIR = "refined_sweep_outputs"
+ROOT = Path(__file__).resolve().parents[1]
+OUTPUT_DIR = str(ROOT / "outputs" / "sweeps" / "refined_sweep_outputs")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # Grid size

@@ -1,6 +1,14 @@
 import random
+from pathlib import Path
+
 import numpy as np
 import matplotlib.pyplot as plt
+
+ROOT = Path(__file__).resolve().parents[1]
+TARGET_NPY = ROOT / "outputs" / "target" / "target_pattern.npy"
+GA_OUT = ROOT / "outputs" / "ga"
+GA_BEST_RADIAL_DIR = GA_OUT / "best_radial_gen"
+GA_BEST_RADIAL_DIR.mkdir(parents=True, exist_ok=True)
 
 # -----------------------------
 # Fixed simulation settings
@@ -8,7 +16,7 @@ import matplotlib.pyplot as plt
 N = 200
 Du = 0.16
 Dv = 0.08
-steps = 5000
+steps = 3000
 dt = 1.0
 seed = 42
 check_interval = 100
@@ -19,15 +27,15 @@ F_MIN, F_MAX = 0.0200, 0.0350
 K_MIN, K_MAX = 0.0550, 0.0625
 
 # GA settings
-POP_SIZE = 12
-GENERATIONS = 12
-ELITE_COUNT = 3
-MUTATION_RATE = 0.30
-MUTATION_SCALE_F = 0.0015
-MUTATION_SCALE_K = 0.0015
+POP_SIZE = 8
+GENERATIONS = 10
+ELITE_COUNT = 2
+MUTATION_RATE = 0.35
+MUTATION_SCALE_F = 0.0012
+MUTATION_SCALE_K = 0.0012
 
 # Load target
-target = np.load("target_pattern.npy")
+target = np.load(TARGET_NPY)
 
 
 def laplacian(Z: np.ndarray) -> np.ndarray:
@@ -117,24 +125,51 @@ def compute_features(V: np.ndarray):
     }
 
 
+def radial_fft_profile(img: np.ndarray, max_radius: int = 40) -> np.ndarray:
+    img_n = normalize(img)
+    img_zm = img_n - np.mean(img_n)
+
+    fft2 = np.fft.fft2(img_zm)
+    fft_shifted = np.fft.fftshift(fft2)
+    magnitude = np.log1p(np.abs(fft_shifted))
+
+    h, w = magnitude.shape
+    cy, cx = h // 2, w // 2
+
+    y, x = np.indices((h, w))
+    r = np.sqrt((x - cx) ** 2 + (y - cy) ** 2)
+    r_int = np.floor(r).astype(int)
+
+    profile = []
+    for radius in range(max_radius):
+        mask = (r_int == radius)
+        profile.append(np.mean(magnitude[mask]) if np.any(mask) else 0.0)
+
+    return normalize(np.array(profile, dtype=np.float64))
+
+
 target_n = normalize(target)
 target_feat = compute_features(target)
+target_radial = radial_fft_profile(target, max_radius=40)
 
 
 def fitness(candidate: np.ndarray) -> float:
     candidate_n = normalize(candidate)
     candidate_feat = compute_features(candidate)
+    candidate_radial = radial_fft_profile(candidate, max_radius=40)
 
     mse_error = mse(candidate_n, target_n)
     std_penalty = abs(candidate_feat["std"] - target_feat["std"])
     grad_penalty = abs(candidate_feat["grad"] - target_feat["grad"])
     active_penalty = abs(candidate_feat["active"] - target_feat["active"])
+    radial_penalty = mse(candidate_radial, target_radial)
 
     total_error = (
-        1.0 * mse_error
-        + 1.5 * std_penalty
-        + 1.5 * grad_penalty
-        + 1.0 * active_penalty
+        0.8 * mse_error
+        + 1.2 * std_penalty
+        + 1.2 * grad_penalty
+        + 0.8 * active_penalty
+        + 2.5 * radial_penalty
     )
 
     return 1.0 / (total_error + 1e-8)
@@ -186,15 +221,12 @@ def evaluate_population(population):
 
 def select_parents(evaluated):
     top_half = evaluated[: max(2, len(evaluated) // 2)]
-    p1 = random.choice(top_half)
-    p2 = random.choice(top_half)
-    return p1, p2
+    return random.choice(top_half), random.choice(top_half)
 
 
 def make_next_generation(evaluated):
     next_population = []
 
-    # Elitism
     for elite in evaluated[:ELITE_COUNT]:
         next_population.append({"F": elite["F"], "k": elite["k"]})
 
@@ -216,7 +248,7 @@ def save_best_image(best_result, generation):
     )
     plt.axis("off")
     plt.tight_layout()
-    plt.savefig(f"best_gen_{generation:02d}.png", dpi=180, bbox_inches="tight")
+    plt.savefig(GA_BEST_RADIAL_DIR / f"best_radial_gen_{generation:02d}.png", dpi=180, bbox_inches="tight")
     plt.close()
 
 
@@ -226,7 +258,6 @@ def main():
 
     population = [random_individual() for _ in range(POP_SIZE)]
     best_history = []
-
     global_best = None
 
     for gen in range(GENERATIONS):
@@ -257,9 +288,9 @@ def main():
     plt.plot(best_history, marker="o")
     plt.xlabel("Generation")
     plt.ylabel("Best Fitness")
-    plt.title("GA Optimization Progress")
+    plt.title("GA Optimization Progress (Radial FFT Fitness)")
     plt.tight_layout()
-    plt.savefig("ga_fitness_progress.png", dpi=180)
+    plt.savefig(GA_OUT / "ga_fitness_progress_radial.png", dpi=180)
     plt.show()
 
 

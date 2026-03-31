@@ -1,4 +1,6 @@
 import os
+from pathlib import Path
+
 import numpy as np
 import matplotlib.pyplot as plt
 from typing import Tuple
@@ -10,9 +12,10 @@ from torch.utils.data import Dataset, random_split
 # -----------------------------
 # Config
 # -----------------------------
-DATA_FILE = "data/processed/rd_dataset.npz"
-MODEL_FILE = "models/cnn_regressor_best.pt"
-OUTPUT_DIR = "models/eval_outputs"
+ROOT = Path(__file__).resolve().parents[1]
+DATA_FILE = str(ROOT / "data" / "processed" / "rd_dataset.npz")
+MODEL_FILE = str(ROOT / "scripts" / "models" / "cnn_regressor_best.pt")
+OUTPUT_DIR = str(ROOT / "scripts" / "models" / "eval_outputs")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 SEED = 42
