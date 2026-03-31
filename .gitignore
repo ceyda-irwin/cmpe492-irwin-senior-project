@@ -1,0 +1,9 @@
+# Large generated datasets (regenerate with scripts/generate_ml_dataset.py)
+**/rd_dataset.npz
+scripts/data/processed/
+data/processed/
+
+# Local notes
+progress_texts/
+
+.DS_Store
