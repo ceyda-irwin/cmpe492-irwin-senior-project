@@ -1,6 +1,8 @@
-numpy 
+numpy
 matplotlib
 pillow
 pandas
 scipy
-torch torchvision
+torch
+torchvision
+streamlit

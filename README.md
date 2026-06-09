@@ -86,6 +86,32 @@ python3 scripts/train_cnn_regressor_v2.py
 python3 scripts/evaluate_cnn_regressor.py
 ```
 
+## Pattern-to-Parameter Analyzer (demo)
+
+A usability layer over the trained inverse pipeline: give it any pattern image
+(a synthetic Gray–Scott field, a hand drawing, or a real animal-skin photo) and
+it predicts the most likely generating parameters \((F, k)\), re-simulates the
+pattern, and shows an input-vs-reconstruction-vs-difference comparison. It can
+also retrieve the nearest dataset patterns ("similar morphology"). **No new
+method is introduced** — it packages the existing forward simulator + trained
+CNN. Shared logic lives in `scripts/analyzer_core.py`.
+
+```bash
+# Command-line analysis (saves figures to outputs/analyzer/)
+python3 scripts/predict_from_image.py path/to/pattern.png
+python3 scripts/predict_from_image.py path/to/leopard.jpg --binarize
+python3 scripts/predict_from_image.py img.png --retrieve   # needs rd_dataset.npz
+
+# Interactive web app (upload → predict → reconstruct → retrieve)
+python3 -m streamlit run app/app.py
+```
+
+> **Honest framing:** a predicted \((F, k)\) is "the Gray–Scott regime whose
+> morphology most closely matches the input", *not* a measurement of true
+> biological parameters. The trained range is narrow, so out-of-regime inputs
+> (e.g. clean parallel zebra stripes) saturate at the range boundary — a
+> deliberate signal of the model's generalization limits.
+
 ## Team member
 
 - **Ceyda İrem Irwin** – 2023400342
