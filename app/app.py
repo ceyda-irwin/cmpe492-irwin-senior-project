@@ -95,6 +95,15 @@ with st.sidebar:
     steps = st.slider("Simulation steps", 500, 5000, core.STEPS, step=500)
     seed = st.number_input("Seed", value=core.SIM_SEED, step=1)
 
+    st.header("Refinement (Stage 2)")
+    do_refine = st.checkbox(
+        "Refine CNN guess (Nelder-Mead)", value=False,
+        help="Warm-start a gradient-free optimizer from the CNN prediction and "
+             "tune (F, k) so the simulated pattern matches the input.",
+    )
+    metric = st.selectbox("Objective", ["mse", "spectral"], disabled=not do_refine)
+    maxiter = st.slider("Max iterations", 10, 80, 40, step=5, disabled=not do_refine)
+
     st.header("Retrieval")
     do_retrieve = st.checkbox(
         "Find similar dataset patterns", value=False, disabled=not data_ok,
@@ -153,6 +162,38 @@ diff_rgb = np.zeros((*diff_64.shape, 3), dtype=np.float32)
 diff_rgb[..., 0] = diff_64 / (diff_64.max() + 1e-8)
 v[3].image(diff_rgb, caption=f"Abs diff (MSE={recon_mse:.4f})",
            clamp=True, use_container_width=True)
+
+# --- Stage 2: refinement --------------------------------------------------
+if do_refine:
+    st.subheader("Hybrid inverse — CNN → Nelder-Mead refinement")
+    with st.spinner("Refining (simulate-and-match) ..."):
+        ref = core.refine(
+            result.query_64, result.F_pred, result.k_pred,
+            ranges=(f_min, f_max, k_min, k_max),
+            metric=metric, steps=int(steps), seed=int(seed), maxiter=int(maxiter),
+        )
+
+    rc = st.columns(4)
+    rc[0].metric("Refined F", f"{ref.F_refined:.4f}", delta=f"{ref.F_refined - ref.F0:+.4f}")
+    rc[1].metric("Refined k", f"{ref.k_refined:.4f}", delta=f"{ref.k_refined - ref.k0:+.4f}")
+    rc[2].metric("Recon MSE", f"{ref.recon_mse:.4f}",
+                 delta=f"{ref.recon_mse - recon_mse:+.4f}", delta_color="inverse")
+    rc[3].metric("Objective ↓", f"{ref.improvement * 100:.0f}%",
+                 help=f"{ref.error0:.4f} → {ref.error_refined:.4f} in {ref.n_evals} simulations")
+
+    rv = st.columns(3)
+    rv[0].image(result.recon_64, caption=f"CNN only (F={ref.F0:.4f}, k={ref.k0:.4f})",
+                clamp=True, use_container_width=True)
+    rv[1].image(ref.recon_64, caption=f"Refined (F={ref.F_refined:.4f}, k={ref.k_refined:.4f})",
+                clamp=True, use_container_width=True)
+    rdiff = np.zeros((*ref.diff_64.shape, 3), dtype=np.float32)
+    rdiff[..., 0] = ref.diff_64 / (ref.diff_64.max() + 1e-8)
+    rv[2].image(rdiff, caption="Abs diff (refined)", clamp=True, use_container_width=True)
+    st.caption(
+        f"Refinement used {ref.n_evals} forward simulations "
+        f"(objective: {metric}). The CNN supplies the warm start; the optimizer "
+        "tunes (F, k) against the actual simulated pattern."
+    )
 
 # --- Retrieval gallery ----------------------------------------------------
 if do_retrieve:

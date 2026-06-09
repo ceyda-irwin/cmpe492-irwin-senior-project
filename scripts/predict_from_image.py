@@ -49,6 +49,13 @@ def main():
                     help="also retrieve nearest dataset patterns (needs rd_dataset.npz)")
     ap.add_argument("--steps", type=int, default=core.STEPS,
                     help="simulation steps for reconstruction")
+    ap.add_argument("--refine", action="store_true",
+                    help="Stage 2: refine the CNN guess with Nelder-Mead "
+                         "(simulate-and-match)")
+    ap.add_argument("--metric", choices=["mse", "spectral"], default="mse",
+                    help="refinement objective (default: mse)")
+    ap.add_argument("--maxiter", type=int, default=40,
+                    help="max Nelder-Mead iterations for refinement")
     args = ap.parse_args()
 
     img_path = Path(args.image)
@@ -97,6 +104,39 @@ def main():
     plt.savefig(out, dpi=170, bbox_inches="tight")
     plt.close()
     print(f"Saved analysis figure -> {out}")
+
+    # Optional Stage 2: optimization-based refinement
+    if args.refine:
+        print("\nStage 2: refining CNN guess with Nelder-Mead "
+              f"(metric={args.metric}, maxiter={args.maxiter}) ...")
+        ref = core.refine(
+            result.query_64, result.F_pred, result.k_pred,
+            metric=args.metric, steps=args.steps, maxiter=args.maxiter,
+        )
+        print(f"  CNN     : F={ref.F0:.4f}, k={ref.k0:.4f}  | objective={ref.error0:.5f}")
+        print(f"  Refined : F={ref.F_refined:.4f}, k={ref.k_refined:.4f}  | objective={ref.error_refined:.5f}")
+        print(f"  Improvement: {ref.improvement * 100:.1f}%  "
+              f"(reconstruction MSE {result.recon_mse:.5f} -> {ref.recon_mse:.5f})  "
+              f"in {ref.n_evals} simulations")
+
+        fig, axes = plt.subplots(1, 4, figsize=(16, 4.4))
+        axes[0].imshow(result.query_64, cmap="gray"); axes[0].set_title("Input (64x64)")
+        axes[1].imshow(result.recon_64, cmap="gray")
+        axes[1].set_title(f"CNN only\nF={ref.F0:.4f}, k={ref.k0:.4f}\nMSE={result.recon_mse:.4f}")
+        axes[2].imshow(ref.recon_64, cmap="gray")
+        axes[2].set_title(f"Refined\nF={ref.F_refined:.4f}, k={ref.k_refined:.4f}\nMSE={ref.recon_mse:.4f}")
+        axes[3].imshow(ref.diff_64, cmap="hot"); axes[3].set_title("Abs diff (refined)")
+        for a in axes:
+            a.axis("off")
+        fig.suptitle(
+            f"Hybrid inverse: CNN -> Nelder-Mead  |  improvement {ref.improvement * 100:.1f}%",
+            fontsize=12,
+        )
+        plt.tight_layout()
+        out_r = core.OUTPUT_DIR / f"refine_{img_path.stem}.png"
+        plt.savefig(out_r, dpi=170, bbox_inches="tight")
+        plt.close()
+        print(f"Saved refinement figure -> {out_r}")
 
     # Optional retrieval gallery
     if args.retrieve:

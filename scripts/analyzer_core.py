@@ -390,6 +390,135 @@ def reconstruct(result: AnalysisResult, steps: int = STEPS,
 
 
 # -----------------------------
+# Stage 2: optimization-based refinement (Nelder-Mead)
+# -----------------------------
+@dataclass
+class RefineResult:
+    F0: float                       # CNN warm-start F
+    k0: float                       # CNN warm-start k
+    F_refined: float
+    k_refined: float
+    error0: float                   # objective at the warm start
+    error_refined: float            # objective after refinement
+    n_evals: int                    # number of forward simulations used
+    metric: str
+    recon_full: Optional[np.ndarray] = None
+    recon_64: Optional[np.ndarray] = None
+    diff_64: Optional[np.ndarray] = None
+    recon_mse: Optional[float] = None
+
+    @property
+    def improvement(self) -> float:
+        """Fractional reduction in the objective (0 = none, 1 = perfect)."""
+        if self.error0 <= 0:
+            return 0.0
+        return (self.error0 - self.error_refined) / self.error0
+
+
+def _radial_fft_profile(img: np.ndarray, max_radius: int = 40) -> np.ndarray:
+    """Normalized radial profile of the log-magnitude FFT spectrum."""
+    z = normalize(img)
+    z = z - z.mean()
+    mag = np.log1p(np.abs(np.fft.fftshift(np.fft.fft2(z))))
+    h, w = mag.shape
+    cy, cx = h // 2, w // 2
+    y, x = np.indices((h, w))
+    r = np.floor(np.sqrt((x - cx) ** 2 + (y - cy) ** 2)).astype(int)
+    prof = np.array([
+        mag[r == rad].mean() if np.any(r == rad) else 0.0
+        for rad in range(max_radius)
+    ], dtype=np.float64)
+    return normalize(prof)
+
+
+def pattern_error(sim_64: np.ndarray, target_64: np.ndarray, metric: str = "mse") -> float:
+    """
+    Objective comparing a simulated 64x64 field to the target.
+      * "mse"     : plain pixel MSE (fast, default).
+      * "spectral": pixel MSE + FFT radial-profile MSE (scale/texture aware).
+    """
+    if metric == "spectral":
+        px = mse(sim_64, target_64)
+        spec = mse(_radial_fft_profile(sim_64), _radial_fft_profile(target_64))
+        return float(px + spec)
+    return mse(sim_64, target_64)
+
+
+def refine(target_64: np.ndarray, F0: float, k0: float, *,
+           ranges: Optional[Tuple[float, float, float, float]] = None,
+           metric: str = "mse", steps: int = STEPS, seed: int = SIM_SEED,
+           maxiter: int = 40) -> RefineResult:
+    """
+    Stage 2: starting from a (CNN) warm start (F0, k0), run bounded Nelder-Mead
+    over (F, k) so the *simulated* pattern matches the target. Gradient-free; each
+    function evaluation is one forward Gray-Scott simulation.
+    """
+    from scipy.optimize import minimize
+
+    f_min, f_max, k_min, k_max = ranges if ranges is not None else load_ranges()
+    span_f = max(f_max - f_min, 1e-12)
+    span_k = max(k_max - k_min, 1e-12)
+
+    counter = {"n": 0}
+
+    def objective(norm_params: np.ndarray) -> float:
+        counter["n"] += 1
+        nf = float(np.clip(norm_params[0], 0.0, 1.0))
+        nk = float(np.clip(norm_params[1], 0.0, 1.0))
+        F = nf * span_f + f_min
+        k = nk * span_k + k_min
+        sim_64 = to_64(normalize(simulate(F, k, steps=steps, seed=seed)))
+        return pattern_error(sim_64, target_64, metric=metric)
+
+    x0 = np.array([(F0 - f_min) / span_f, (k0 - k_min) / span_k], dtype=np.float64)
+    x0 = np.clip(x0, 0.0, 1.0)
+    error0 = objective(x0)
+
+    res = minimize(
+        objective, x0, method="Nelder-Mead",
+        bounds=[(0.0, 1.0), (0.0, 1.0)],
+        options={"maxiter": maxiter, "xatol": 1e-3, "fatol": 1e-5},
+    )
+
+    nf, nk = np.clip(res.x, 0.0, 1.0)
+    F_ref = float(nf * span_f + f_min)
+    k_ref = float(nk * span_k + k_min)
+
+    out = RefineResult(
+        F0=F0, k0=k0, F_refined=F_ref, k_refined=k_ref,
+        error0=float(error0), error_refined=float(res.fun),
+        n_evals=counter["n"], metric=metric,
+    )
+
+    # Fill in a reconstruction at the refined parameters for display.
+    V = normalize(simulate(F_ref, k_ref, steps=steps, seed=seed))
+    out.recon_full = V
+    out.recon_64 = to_64(V)
+    out.diff_64 = np.abs(target_64 - out.recon_64)
+    out.recon_mse = mse(target_64, out.recon_64)
+    return out
+
+
+def hybrid_invert(model: CNNRegressorV2, query_64: np.ndarray, *,
+                  metric: str = "mse", steps: int = STEPS, seed: int = SIM_SEED,
+                  maxiter: int = 40,
+                  ranges: Optional[Tuple[float, float, float, float]] = None
+                  ) -> Tuple[AnalysisResult, RefineResult]:
+    """
+    Full two-stage inverse: CNN coarse prediction (Stage 1) -> Nelder-Mead
+    refinement against the simulated pattern (Stage 2). Returns both results so
+    the caller can show a CNN-only vs refined comparison.
+    """
+    coarse = predict(model, query_64, ranges=ranges)
+    coarse = reconstruct(coarse, steps=steps, seed=seed)
+    refined = refine(
+        query_64, coarse.F_pred, coarse.k_pred,
+        ranges=ranges, metric=metric, steps=steps, seed=seed, maxiter=maxiter,
+    )
+    return coarse, refined
+
+
+# -----------------------------
 # Retrieval from dataset
 # -----------------------------
 def retrieve_similar(model: CNNRegressorV2, query_64: np.ndarray,
