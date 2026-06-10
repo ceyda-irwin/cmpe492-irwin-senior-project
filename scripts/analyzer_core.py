@@ -38,9 +38,30 @@ import torch.nn as nn
 # Paths / config
 # -----------------------------
 ROOT = Path(__file__).resolve().parents[1]
-MODEL_FILE = ROOT / "scripts" / "models" / "cnn_regressor_v2_best.pt"
+MODEL_DIR = ROOT / "scripts" / "models"
 DATA_DIR = ROOT / "data" / "processed"
 OUTPUT_DIR = ROOT / "outputs" / "analyzer"
+
+
+def _resolve_model_file():
+    """
+    Pick the best available CNNRegressorV2 checkpoint. Prefers the largest
+    size-tagged `cnn_v2_{N}.pt` (trained on the most data), then falls back to
+    the canonical `cnn_regressor_v2_best.pt`.
+    """
+    def _n(p: Path) -> int:
+        try:
+            return int(p.stem.split("_")[-1])
+        except ValueError:
+            return -1
+
+    tagged = sorted(MODEL_DIR.glob("cnn_v2_*.pt"), key=_n)
+    if tagged:
+        return tagged[-1]
+    return MODEL_DIR / "cnn_regressor_v2_best.pt"
+
+
+MODEL_FILE = _resolve_model_file()
 
 
 def _resolve_data_file():
