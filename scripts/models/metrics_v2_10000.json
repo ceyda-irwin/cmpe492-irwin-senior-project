@@ -1,0 +1,11 @@
+{
+  "samples": 10000,
+  "test_size": 1500,
+  "norm_test_loss": 0.0009196700481697917,
+  "F_mae": 0.0003763133427128196,
+  "k_mae": 0.00014413715689443052,
+  "F_mse": 2.673749008863524e-07,
+  "k_mse": 3.6619145049598956e-08,
+  "model": "scripts/models/cnn_v2_10000.pt",
+  "dataset": "data/processed/rd_dataset_10000.npz"
+}

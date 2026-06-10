@@ -7,3 +7,5 @@ data/processed/
 progress_texts/
 
 .DS_Store
+
+*.pdf

@@ -26,7 +26,7 @@ K_MIN, K_MAX = 0.0550, 0.0625
 NUM_SAMPLES = 10000
 OUTPUT_SIZE = 64
 OUTPUT_DIR = str(ROOT / "data" / "processed")
-OUTPUT_FILE = str(ROOT / "data" / "processed" / "rd_dataset.npz")
+OUTPUT_FILE = str(ROOT / "data" / "processed" / "rd_dataset_10000.npz")
 
 
 def laplacian(Z: np.ndarray) -> np.ndarray:

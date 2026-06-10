@@ -1,0 +1,43 @@
+=== START Wed Jun 10 03:10:34 +03 2026 ===
+[compare] model = scripts/models/cnn_v2_20000.pt
+
+[target 1/6] true F=0.0316, k=0.0583
+  CNN    : F=0.0349 k=0.0596  mse=0.10450  evals=1  0.98s
+  GA     : F=0.0316 k=0.0583  mse=0.00000  evals=60  42.90s
+  Hybrid : F=0.0316 k=0.0583  mse=0.00004  evals=76  55.81s
+
+[target 2/6] true F=0.0329, k=0.0602
+  CNN    : F=0.0349 k=0.0611  mse=0.05052  evals=1  0.73s
+  GA     : F=0.0322 k=0.0601  mse=0.00077  evals=60  41.62s
+  Hybrid : F=0.0329 k=0.0602  mse=0.00000  evals=51  37.61s
+
+[target 3/6] true F=0.0214, k=0.0623
+  CNN    : F=0.0211 k=0.0621  mse=0.00001  evals=1  0.09s
+  GA     : F=0.0241 k=0.0625  mse=0.00019  evals=60  26.46s
+  Hybrid : F=0.0211 k=0.0622  mse=0.00000  evals=23  2.10s
+
+[target 4/6] true F=0.0314, k=0.0609
+  CNN    : F=0.0346 k=0.0614  mse=0.05807  evals=1  0.73s
+  GA     : F=0.0308 k=0.0608  mse=0.00685  evals=60  43.82s
+  Hybrid : F=0.0315 k=0.0609  mse=0.00007  evals=77  56.95s
+
+[target 5/6] true F=0.0219, k=0.0584
+  CNN    : F=0.0219 k=0.0585  mse=0.00607  evals=1  0.73s
+  GA     : F=0.0229 k=0.0594  mse=0.04220  evals=60  43.76s
+  Hybrid : F=0.0219 k=0.0584  mse=0.00000  evals=28  21.17s
+
+[target 6/6] true F=0.0256, k=0.0620
+  CNN    : F=0.0258 k=0.0617  mse=0.02353  evals=1  0.74s
+  GA     : F=0.0240 k=0.0615  mse=0.00085  evals=60  43.77s
+  Hybrid : F=0.0256 k=0.0620  mse=0.00000  evals=40  30.25s
+
+=== Method comparison (averaged over targets) ===
+  Method |    F_MAE |    k_MAE |  recon_MSE |  evals |  time(s)
+---------------------------------------------------------------
+     CNN |  0.00152 |  0.00055 |    0.04045 |      1 |     0.67
+      GA |  0.00110 |  0.00032 |    0.00848 |     60 |    40.39
+  Hybrid |  0.00008 |  0.00003 |    0.00002 |     49 |    33.98
+
+Saved -> /Users/ceyda/Desktop/cmpe492-irwin-senior-project/scripts/models/method_comparison.csv
+Saved -> /Users/ceyda/Desktop/cmpe492-irwin-senior-project/scripts/models/method_comparison.png
+=== DONE Wed Jun 10 03:18:10 +03 2026 ===

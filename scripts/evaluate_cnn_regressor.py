@@ -13,8 +13,8 @@ from torch.utils.data import Dataset, random_split
 # Config
 # -----------------------------
 ROOT = Path(__file__).resolve().parents[1]
-DATA_FILE = str(ROOT / "data" / "processed" / "rd_dataset.npz")
-MODEL_FILE = str(ROOT / "scripts" / "models" / "cnn_regressor_best.pt")
+DATA_FILE = str(ROOT / "data" / "processed" / "rd_dataset_10000.npz")
+MODEL_FILE = str(ROOT / "scripts" / "models" / "cnn_regressor_10000_best.pt")
 OUTPUT_DIR = str(ROOT / "scripts" / "models" / "eval_outputs")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 

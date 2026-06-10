@@ -1,0 +1,119 @@
+=== START Tue Jun  9 23:14:42 +03 2026 ===
+### 3000: generate + train + eval ###
+[generate] N=3000, steps=3000 -> /Users/ceyda/Desktop/cmpe492-irwin-senior-project/data/processed/rd_dataset_3000.npz
+[generate]   100/3000
+[generate]   200/3000
+[generate]   300/3000
+[generate]   400/3000
+[generate]   500/3000
+[generate]   600/3000
+[generate]   700/3000
+[generate]   800/3000
+[generate]   900/3000
+[generate]   1000/3000
+[generate]   1100/3000
+[generate]   1200/3000
+[generate]   1300/3000
+[generate]   1400/3000
+[generate]   1500/3000
+[generate]   1600/3000
+[generate]   1700/3000
+[generate]   1800/3000
+[generate]   1900/3000
+[generate]   2000/3000
+[generate]   2100/3000
+[generate]   2200/3000
+[generate]   2300/3000
+[generate]   2400/3000
+[generate]   2500/3000
+[generate]   2600/3000
+[generate]   2700/3000
+[generate]   2800/3000
+[generate]   2900/3000
+[generate]   3000/3000
+[generate] saved /Users/ceyda/Desktop/cmpe492-irwin-senior-project/data/processed/rd_dataset_3000.npz  X=(3000, 1, 64, 64)
+[train] N=3000, epochs=20, device=cpu, train=2100, val=450
+[train]   epoch 01/20 | train=0.040493 | val=0.009606
+[train]   epoch 02/20 | train=0.010056 | val=0.005207
+[train]   epoch 03/20 | train=0.006921 | val=0.012502
+[train]   epoch 04/20 | train=0.007323 | val=0.009145
+[train]   epoch 05/20 | train=0.005716 | val=0.006562
+[train]   epoch 06/20 | train=0.004616 | val=0.004949
+[train]   epoch 07/20 | train=0.005128 | val=0.009044
+[train]   epoch 08/20 | train=0.004771 | val=0.002907
+[train]   epoch 09/20 | train=0.003183 | val=0.002708
+[train]   epoch 10/20 | train=0.003252 | val=0.002414
+[train]   epoch 11/20 | train=0.002722 | val=0.002312
+[train]   epoch 12/20 | train=0.002716 | val=0.002188
+[train]   epoch 13/20 | train=0.002431 | val=0.002386
+[train]   epoch 14/20 | train=0.003550 | val=0.002403
+[train]   epoch 15/20 | train=0.002177 | val=0.003142
+[train]   epoch 16/20 | train=0.002229 | val=0.002192
+[train]   epoch 17/20 | train=0.001866 | val=0.001506
+[train]   epoch 18/20 | train=0.001756 | val=0.002549
+[train]   epoch 19/20 | train=0.002038 | val=0.002933
+[train]   epoch 20/20 | train=0.002355 | val=0.002057
+[train] best val=0.001506 -> /Users/ceyda/Desktop/cmpe492-irwin-senior-project/scripts/models/cnn_v2_3000.pt
+[eval] N=3000: F_mae=0.00051 k_mae=0.00019 norm_loss=0.001728 -> /Users/ceyda/Desktop/cmpe492-irwin-senior-project/scripts/models/metrics_v2_3000.json
+[eval] saved reconstructions -> /Users/ceyda/Desktop/cmpe492-irwin-senior-project/scripts/models/eval_v2_3000
+### 10000: train + eval ###
+[train] N=10000, epochs=20, device=cpu, train=7000, val=1500
+[train]   epoch 01/20 | train=0.018377 | val=0.007090
+[train]   epoch 02/20 | train=0.006104 | val=0.004269
+[train]   epoch 03/20 | train=0.004167 | val=0.003839
+[train]   epoch 04/20 | train=0.003618 | val=0.002874
+[train]   epoch 05/20 | train=0.003124 | val=0.002306
+[train]   epoch 06/20 | train=0.002348 | val=0.003019
+[train]   epoch 07/20 | train=0.002224 | val=0.003477
+[train]   epoch 08/20 | train=0.001953 | val=0.001910
+[train]   epoch 09/20 | train=0.001871 | val=0.001363
+[train]   epoch 10/20 | train=0.001444 | val=0.001283
+[train]   epoch 11/20 | train=0.001536 | val=0.001456
+[train]   epoch 12/20 | train=0.001419 | val=0.001295
+[train]   epoch 13/20 | train=0.001274 | val=0.001237
+[train]   epoch 14/20 | train=0.001115 | val=0.001544
+[train]   epoch 15/20 | train=0.001200 | val=0.001127
+[train]   epoch 16/20 | train=0.001168 | val=0.000987
+[train]   epoch 17/20 | train=0.001243 | val=0.001125
+[train]   epoch 18/20 | train=0.001107 | val=0.000994
+[train]   epoch 19/20 | train=0.001037 | val=0.000848
+[train]   epoch 20/20 | train=0.001071 | val=0.001050
+[train] best val=0.000848 -> /Users/ceyda/Desktop/cmpe492-irwin-senior-project/scripts/models/cnn_v2_10000.pt
+[eval] N=10000: F_mae=0.00038 k_mae=0.00014 norm_loss=0.000920 -> /Users/ceyda/Desktop/cmpe492-irwin-senior-project/scripts/models/metrics_v2_10000.json
+[eval] saved reconstructions -> /Users/ceyda/Desktop/cmpe492-irwin-senior-project/scripts/models/eval_v2_10000
+### 20000: train + eval ###
+[train] N=20000, epochs=20, device=cpu, train=14000, val=3000
+[train]   epoch 01/20 | train=0.011586 | val=0.005800
+[train]   epoch 02/20 | train=0.004178 | val=0.002899
+[train]   epoch 03/20 | train=0.002654 | val=0.001939
+[train]   epoch 04/20 | train=0.002161 | val=0.001851
+[train]   epoch 05/20 | train=0.001452 | val=0.001269
+[train]   epoch 06/20 | train=0.001354 | val=0.001409
+[train]   epoch 07/20 | train=0.001178 | val=0.002096
+[train]   epoch 08/20 | train=0.001141 | val=0.001056
+[train]   epoch 09/20 | train=0.000952 | val=0.001069
+[train]   epoch 10/20 | train=0.000962 | val=0.000890
+[train]   epoch 11/20 | train=0.000873 | val=0.000979
+[train]   epoch 12/20 | train=0.000865 | val=0.000853
+[train]   epoch 13/20 | train=0.000867 | val=0.000729
+[train]   epoch 14/20 | train=0.000844 | val=0.000718
+[train]   epoch 15/20 | train=0.000696 | val=0.000655
+[train]   epoch 16/20 | train=0.000707 | val=0.000584
+[train]   epoch 17/20 | train=0.000721 | val=0.000599
+[train]   epoch 18/20 | train=0.000627 | val=0.000656
+[train]   epoch 19/20 | train=0.000647 | val=0.000698
+[train]   epoch 20/20 | train=0.000590 | val=0.000787
+[train] best val=0.000584 -> /Users/ceyda/Desktop/cmpe492-irwin-senior-project/scripts/models/cnn_v2_20000.pt
+[eval] N=20000: F_mae=0.00032 k_mae=0.00009 norm_loss=0.000613 -> /Users/ceyda/Desktop/cmpe492-irwin-senior-project/scripts/models/metrics_v2_20000.json
+[eval] saved reconstructions -> /Users/ceyda/Desktop/cmpe492-irwin-senior-project/scripts/models/eval_v2_20000
+### compare ###
+
+=== Dataset-size comparison ===
+      N |     F_MAE |     k_MAE |  norm_loss
+   3000 |   0.00051 |   0.00019 |   0.001728
+  10000 |   0.00038 |   0.00014 |   0.000920
+  20000 |   0.00032 |   0.00009 |   0.000613
+
+Saved -> /Users/ceyda/Desktop/cmpe492-irwin-senior-project/scripts/models/size_comparison.csv
+Saved -> /Users/ceyda/Desktop/cmpe492-irwin-senior-project/scripts/models/size_comparison.png
+=== DONE Wed Jun 10 00:15:52 +03 2026 ===

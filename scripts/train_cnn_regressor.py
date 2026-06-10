@@ -13,7 +13,7 @@ from torch.utils.data import Dataset, DataLoader, random_split
 # Config
 # -----------------------------
 ROOT = Path(__file__).resolve().parents[1]
-DATA_FILE = str(ROOT / "data" / "processed" / "rd_dataset.npz")
+DATA_FILE = str(ROOT / "data" / "processed" / "rd_dataset_10000.npz")
 MODEL_DIR = str(ROOT / "scripts" / "models")
 os.makedirs(MODEL_DIR, exist_ok=True)
 
@@ -188,7 +188,7 @@ def main():
     val_losses = []
 
     best_val_loss = float("inf")
-    best_model_path = os.path.join(MODEL_DIR, "cnn_regressor_best.pt")
+    best_model_path = os.path.join(MODEL_DIR, "cnn_regressor_10000_best.pt")
 
     for epoch in range(EPOCHS):
         train_loss = train_one_epoch(model, train_loader, criterion, optimizer)
